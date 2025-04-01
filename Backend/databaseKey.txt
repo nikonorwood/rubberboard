@@ -1,0 +1,15 @@
+rubberoom
+    posts
+        id : serial
+        username : varchar [32 char]
+        title: varchar [64 char]
+        comments : JSON
+        body : varchar
+    users
+        username : varchar
+        displayname : varchar
+        password : hash?
+        permissions : int
+        invited_by : varchar?
+        invite_code : int (also serves as primary id)
+        intives_remaining : int
