@@ -35,9 +35,10 @@ app.use(express.json());
 //test query function
 async function getAllData(){
     const data = await sql`
-        SELECT id,username,topic,time,body,likes,dislikes,catagory 
-        FROM posts 
-        ORDER BY id DESC
+        SELECT p.id, p.username, p.topic, p.time, p.body, p.likes, p.dislikes, p.catagory, u.commonname
+        FROM public.posts p
+        JOIN public.users u ON p.username = u.username
+        ORDER BY p.id DESC
         LIMIT 20;`
 
     return data
