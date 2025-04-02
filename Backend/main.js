@@ -8,10 +8,16 @@
     Created by Niko Norwood on 03/31/2025
 */
 
+//database connection string
+const databaseLocation = ""
+
 const express = require('express');
 const app = express();
 const bygone = require ('./bygoneBackend');
+const postgres = require('postgres');
 const path = require('path');
+
+const sql = postgres(databaseLocation)
 
 //port the server will operate on
 const port = 3060;
@@ -26,9 +32,24 @@ app.use(express.json());
 
 
 
+//test query function
+async function getAllData(){
+    const data = await sql`
+        SELECT id,username,topic,time,body,likes,dislikes,catagory 
+        FROM posts 
+        ORDER BY id DESC
+        LIMIT 20;`
+
+    return data
+}
+
+
+
 //Returns last x number of posts
 app.get("/api/newPosts", (req, res) => {
-    //yessss
+    getAllData().then((sqlReturn) =>{
+        res.send(sqlReturn)
+    });
 });
 
 
