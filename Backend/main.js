@@ -77,12 +77,8 @@ app.get("/api/newPosts", (req, res) => {
         res.send(queryReturn)
     })
     .catch((error) => {
-        if (error == 404){
-            res.status(404).send("That Post Was Not Found");
-        } else {
-            res.status(500).send("The Rats Messed Up That One!");
-            bygone.output(`ERROR! /api/newPost triggered 500 response due to ${error}`)
-        }
+        res.status(500).json({code: 510, message: "The Rats Messed Up That One!"});
+        bygone.output(`ERROR! /api/newPosts triggered 500 response due to ${error}`)
     });
 });
 
@@ -92,20 +88,22 @@ app.get("/api/newPosts", (req, res) => {
 app.get("/api/readPost", (req,res) => {
     //make sure the request is being made with data and specificly a number in the postid feild
     if (!req.body || !req.body.postid ||typeof req.body.postid != "number") {
-        res.status(400).send("The Rats Didn't Understand What Was Requested!");
+        res.status(400).json({code: 520, message: "The Rats Didn't Understand What Was Requested!"});
         return;
     }
 
+    //run sql querry
     getPostDetails(req.body.postid)
     .then((queryReturn) =>{
         res.send(queryReturn)
     })
     .catch((error) => {
+        //check for controlled not found error
         if (error == 404){
-            res.status(404).send("That Post Was Not Found");
+            res.status(404).json({code: 404, message: "That Post Was Not Found"});
         } else {
-            res.status(500).send("The Rats Messed Up That One!");
-            bygone.output(`ERROR! /api/newPost triggered 500 response due to ${error}`)
+            res.status(500).json({code: 521, message: "The Rats Dropped the Post!"});
+            bygone.output(`ERROR! /api/readPost triggered 500 response due to ${error}`)
         }
     });
 });
