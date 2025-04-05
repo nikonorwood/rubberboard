@@ -27,9 +27,9 @@ const port = 3060;
 bygone.output("\n\n-----Rubberboard Backend v0.1-----\n");
 bygone.output("INITIALIZING...");
 
-if (databaseLocation.length = 0){
+if (databaseLocation.length == 0 || databaseLocation == null){
     bygone.output("ERROR! - database location value is empty! Server cannot start!")
-    return;
+    process.exit();
 }
 
 bygone.setDebug(true);
@@ -114,6 +114,23 @@ async function reactToPost(postid,username,like){
         }
     }    
 }
+
+
+
+//
+async function makePost(username,topic,body,catagory){
+    if (catagory = null){
+        const data = await sql`
+            INSERT INTO posts ('username','topic','body') VALUES (${username},${topic},${body}) RETURNING *;`
+        return data;
+    } else {
+        const data = await sql`
+            INSERT INTO posts ('username','topic','body','catagory') VALUES (${username},${topic},${body},${catagory}) RETURNING *;`
+        return data;
+    }
+}
+
+
 
 //  REST HANDLERS
 
