@@ -55,7 +55,7 @@ async function getNewPosts(limit){
 
 
 
-// returns full data about a post
+//returns full data about a post
 async function getPostDetails(postid){
     const data = await sql`
         SELECT p.*, u.commonname
@@ -71,6 +71,50 @@ async function getPostDetails(postid){
 }
 
 
+
+//Handles likes and dislikes. Makes sure username exists then adds it to like or dislike array and removes it from the other if present
+async function reactToPost(postid,username,like){
+    if (like){
+        const data = await sql`
+            WITH username_exists AS (
+            SELECT 1 FROM users WHERE username = ${username}
+            LIMIT 1)
+
+            UPDATE posts
+            SET dislikes = array_remove(dislikes,${username}),
+                likes = array_append(likes, ${username})
+            WHERE id = ${postid} 
+            AND ${username} <> ALL(likes)
+            AND EXISTS (SELECT 1 FROM username_exists)
+            RETURNING likes,dislikes;`
+
+        if (data.length != 0) {
+            return data;
+        } else {
+            throw 404;
+        }
+    } else {
+        const data = await sql`
+            WITH username_exists AS (
+            SELECT 1 FROM users WHERE username = ${username}
+            LIMIT 1)
+
+            UPDATE posts
+            SET dislikes = array_append(dislikes,${username}),
+                likes = array_remove(likes, ${username})
+            WHERE id = ${postid} 
+            AND ${username} <> ALL(dislikes)
+            AND EXISTS (SELECT 1 FROM username_exists)
+            RETURNING likes,dislikes;`
+        
+        if (data.length != 0) {
+            return data;
+        } else {
+            throw 404;
+        }
+    }    
+}
+
 //  REST HANDLERS
 
 
@@ -83,7 +127,7 @@ app.get("/api/newPosts", (req, res) => {
     })
     .catch((error) => {
         res.status(500).json({code: 510, message: "The Rats Messed Up That One!"});
-        bygone.output(`ERROR! /api/newPosts triggered 500 response due to ${error}`)
+        bygone.output(`ERROR! /api/newPosts triggered 510 response due to ${error}`)
     });
 });
 
@@ -108,7 +152,7 @@ app.get("/api/readPost", (req,res) => {
             res.status(404).json({code: 404, message: "That Post Was Not Found"});
         } else {
             res.status(500).json({code: 521, message: "The Rats Dropped the Post!"});
-            bygone.output(`ERROR! /api/readPost triggered 500 response due to ${error}`)
+            bygone.output(`ERROR! /api/readPost triggered 521 response due to ${error}`)
         }
     });
 });
@@ -118,6 +162,43 @@ app.get("/api/readPost", (req,res) => {
 app.post("/api/makePost", (req,res) => {
     //some code should go here
 });
+
+
+
+//handles likes and dislikes to the database  {postid:int, username:string, like:bool}
+app.post("/api/reactToPost", (req,res) => {
+    //make sure the request is being made with data
+    if (!req.body || !req.body.postid ||
+            typeof req.body.postid != "number" || 
+            typeof req.body.username != "string" || 
+            typeof req.body.like != "boolean") {
+
+        res.status(400).json({code: 530, message: "The Rats Can't hear your cryptic message!"});
+        return;
+    }
+    
+    reactToPost(req.body.postid,req.body.username,req.body.like)
+    .then((result) =>{
+        // might have to think of a better way to handle this but this is the confirmation message
+        res.send(result);
+    })
+    .catch((error) => {
+        //check for controlled not found error
+        if (error == 404){
+            res.status(404).json({code: 404, message: "That Post or User Was Not Found"});
+        } else {
+            res.status(500).json({code: 531, message: "The Rats Dissagree with you!"});
+            bygone.output(`ERROR! /api/reactToPost triggered 531 response due to ${error}`)
+        }
+    });
+});
+
+
+
+//handler for making comments
+app.post("/api/makeComment", (req,res) =>{
+    // up this is code alright
+})
 
 
 
