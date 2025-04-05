@@ -121,11 +121,11 @@ async function reactToPost(postid,username,like){
 async function makePost(username,topic,body,catagory){
     if (catagory = null){
         const data = await sql`
-            INSERT INTO posts ('username','topic','body') VALUES (${username},${topic},${body}) RETURNING *;`
+            INSERT INTO posts (username,topic,body) VALUES (${username},${topic},${body}) RETURNING *;`
         return data;
     } else {
         const data = await sql`
-            INSERT INTO posts ('username','topic','body','catagory') VALUES (${username},${topic},${body},${catagory}) RETURNING *;`
+            INSERT INTO posts (username,topic,body,catagory) VALUES (${username},${topic},${body},${catagory}) RETURNING *;`
         return data;
     }
 }
@@ -176,16 +176,10 @@ app.get("/api/readPost", (req,res) => {
 
 
 
-app.post("/api/makePost", (req,res) => {
-    //some code should go here
-});
-
-
-
 //handles likes and dislikes to the database  {postid:int, username:string, like:bool}
 app.post("/api/reactToPost", (req,res) => {
     //make sure the request is being made with data
-    if (!req.body || !req.body.postid ||
+    if (!req.body || !req.body.postid || !req.body.username || !req.body.like ||
             typeof req.body.postid != "number" || 
             typeof req.body.username != "string" || 
             typeof req.body.like != "boolean") {
@@ -207,6 +201,33 @@ app.post("/api/reactToPost", (req,res) => {
             res.status(500).json({code: 531, message: "The Rats Dissagree with you!"});
             bygone.output(`ERROR! /api/reactToPost triggered 531 response due to ${error}`)
         }
+    });
+});
+
+
+
+app.post("/api/makePost", (req,res) => {
+    //make sure the request is being made with data
+    if (!req.body || !req.body.postBody || !req.body.username || !req.body.topic ||
+        typeof req.body.postBody != "string" || 
+        typeof req.body.username != "string" || 
+        typeof req.body.topic != "string") {
+
+        res.status(400).json({code: 540, message: "The Rats Heard Crazy Rambling Instead of a Post"});
+        return;
+    }
+
+    let catagory = "";
+    if (req.body.catagory){catagory = req.body.catagory;}
+
+    makePost(req.body.username,req.body.topic,req.body.postBody,catagory)
+    .then((result) =>{
+        // might have to think of a better way to handle this but this is the confirmation message
+        res.send(result);
+    })
+    .catch((error) => {
+        res.status(500).json({code: 541, message: "The Rats Couldnt Parse That!"});
+        bygone.output(`ERROR! /api/reactToPost triggered 541 response due to ${error}`)
     });
 });
 
