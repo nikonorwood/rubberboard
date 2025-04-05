@@ -27,6 +27,11 @@ const port = 3060;
 bygone.output("\n\n-----Rubberboard Backend v0.1-----\n");
 bygone.output("INITIALIZING...");
 
+if (databaseLocation.length = 0){
+    bygone.output("ERROR! - database location value is empty! Server cannot start!")
+    return;
+}
+
 bygone.setDebug(true);
 
 app.use(express.json());
