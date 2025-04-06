@@ -17,6 +17,7 @@ const bygone = require ('./bygoneBackend');
 const postgres = require('postgres');
 const path = require('path');
 const { request } = require('http');
+var readline = require('readline');
 
 const sql = postgres(databaseLocation)
 
@@ -24,7 +25,7 @@ const sql = postgres(databaseLocation)
 const port = 3060;
 
 //Throw some output to show different sessions in serverLog.txt
-bygone.output("\n\n-----Rubberboard Backend v0.1-----\n");
+bygone.output("\n\n-----Rubberboard Backend v0.1-----\n\nPress q to exit\n");
 bygone.output("INITIALIZING...");
 
 if (databaseLocation.length == 0 || databaseLocation == null){
@@ -243,8 +244,17 @@ app.post("/api/makeComment", (req,res) =>{
 //start Server
 app.listen(port, () =>{bygone.output(`Server Online at port ${port}`)})
 
+//Keyboard listener
+readline.emitKeypressEvents(process.stdin);
+process.stdin.on('keypress', (chunk, key) => {
+    if (key && key.name == 'q'){
+      process.exit();
+    }
+});
+
 // gonna be honest... no clue if this function is nessesary anymore ¯\_(ツ)_/¯
 // Close the logger when application exits
 process.on('exit', () => {
+    bygone.output("Shutting down...")
     logger.close();
 });
