@@ -133,6 +133,14 @@ async function makePost(username,topic,body,catagory){
 
 
 
+async function makeComment(postid,username,body){
+    const data = await sql`
+    INSERT INTO comments (postid,username,body) VALUES (${postid},${username},${body})
+    RETURNING *;`
+}
+
+
+
 //  REST HANDLERS
 
 
@@ -234,7 +242,7 @@ app.post("/api/makePost", (req,res) => {
 
 
 
-//handler for making comments
+//handler for making comments (username : string, commentBody : string)
 app.post("/api/makeComment", (req,res) =>{
     // up this is code alright
 })
