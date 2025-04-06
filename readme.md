@@ -1,5 +1,5 @@
 # RubberBoard
-### Social Media Experiment by Niko Norwood
+Social Media Experiment by Niko Norwood
 
 ## The Idea
 Make a simple localy hosted social media site as both a programming exercise and a communication method.
