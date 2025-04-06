@@ -90,6 +90,7 @@ async function getPostDetails(postid){
 
 //Handles likes and dislikes. Makes sure username exists then adds it to like or dislike array and removes it from the other if present
 async function reactToPost(postid,username,like){
+    //Seperate querys for like and dislike
     if (like){
         const data = await sql`
             WITH username_exists AS (
@@ -135,6 +136,7 @@ async function reactToPost(postid,username,like){
 
 //Handles creating new posts
 async function makePost(username,topic,body,catagory){
+    //seperate querys for catagory and no catagory
     if (catagory = null){
         const data = await sql`
             INSERT INTO posts (username,topic,body) VALUES (${username},${topic},${body}) RETURNING *;`
@@ -148,6 +150,7 @@ async function makePost(username,topic,body,catagory){
 
 
 
+//Creates new comment in comment table and ties it to the post
 async function makeComment(postid,username,body){
     const data = await sql`
     INSERT INTO comments (postid,username,body) VALUES (${postid},${username},${body})
