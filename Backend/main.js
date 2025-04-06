@@ -56,13 +56,28 @@ async function getNewPosts(limit){
 
 
 
+//returns all the comments on a post
+async function getComments(postid){
+    const data = await sql`
+    SELECT p.id, c.*
+    FROM public.posts p
+    LEFT JOIN public.comments c ON p.id = c.postid
+    LEFT JOIN public.users cu ON c.commentUser = cu.username
+    WHERE p.id = ${postid};`
+
+    return data;
+}
+
+
+
 //returns full data about a post
 async function getPostDetails(postid){
     const data = await sql`
+        -- Query for the post itself
         SELECT p.*, u.commonname
         FROM public.posts p
         JOIN public.users u ON p.username = u.username
-        WHERE p.id = ${postid};`
+        WHERE p.id = ${postid}`
 
     if (data.length != 0) {
         return data;
@@ -118,7 +133,7 @@ async function reactToPost(postid,username,like){
 
 
 
-//
+//Handles creating new posts
 async function makePost(username,topic,body,catagory){
     if (catagory = null){
         const data = await sql`
@@ -167,10 +182,17 @@ app.get("/api/readPost", (req,res) => {
         return;
     }
 
-    //run sql querry
+    //run sql querry for post
     getPostDetails(req.body.postid)
-    .then((queryReturn) =>{
-        res.send(queryReturn)
+    .then((post) =>{
+        //run query for comments
+        getComments(req.body.postid)
+        .then((comments) => {
+            res.send({post,comments});
+        }).catch((error) => {
+            res.status(500).json({code: 522, message: "The Rats Dropped the comments!"});
+            bygone.output(`ERROR! /api/readPost triggered 522 response due to ${error}`)
+        })
     })
     .catch((error) => {
         //check for controlled not found error
@@ -244,7 +266,29 @@ app.post("/api/makePost", (req,res) => {
 
 //handler for making comments (username : string, commentBody : string)
 app.post("/api/makeComment", (req,res) =>{
-    // up this is code alright
+    //make sure the request is being made with data
+    if (!req.body || !req.body.commentBody || !req.body.username || !req.body.postid ||
+        typeof req.body.commentBody != "string" || 
+        typeof req.body.username != "string" || 
+        typeof req.body.postid != "number") {
+
+        res.status(400).json({code: 550, message: "The Rats Didnt Hear Your Comment!"});
+        return;
+    }
+
+    makeComment(req.body.postid,req.body.username,req.body.commentBody)
+    .then((result) => {
+        res.send(result);
+    })
+    .catch((error) =>{
+        //check for controlled not found error
+        if (error == 404){
+            res.status(404).json({code: 404, message: "That Post Was Not Found"});
+        } else {
+            res.status(500).json({code: 551, message: "The Rats Think Your Opinion is Dumb!"});
+            bygone.output(`ERROR! /api/reactToPost triggered 551 response due to ${error}`)
+        }
+    });
 })
 
 
